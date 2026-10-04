@@ -55,3 +55,18 @@ class Medicine(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Inventory(models.Model):
+    facility = models.ForeignKey(Facility, on_delete=models.CASCADE, related_name='inventory')
+    medicine = models.ForeignKey(Medicine, on_delete=models.CASCADE, related_name='inventory')
+    quantity = models.PositiveIntegerField(default=0)
+    reserved_quantity = models.PositiveIntegerField(default=0)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name_plural = "Inventory"
+        unique_together = ('facility', 'medicine')
+
+    def __str__(self):
+        return f"{self.medicine.name} @ {self.facility.name}: {self.quantity}"
