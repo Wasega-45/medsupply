@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import County, Facility, Medicine
+from .models import County, Facility, Medicine, Inventory
 
 
 @admin.register(County)
@@ -20,3 +20,10 @@ class MedicineAdmin(admin.ModelAdmin):
     list_display = ('name', 'category', 'unit', 'reorder_level', 'active')
     list_filter = ('category', 'active')
     search_fields = ('name', 'category')
+
+
+@admin.register(Inventory)
+class InventoryAdmin(admin.ModelAdmin):
+    list_display = ('facility', 'medicine', 'quantity', 'reserved_quantity', 'updated_at')
+    list_filter = ('facility', 'medicine')
+    search_fields = ('facility__name', 'medicine__name')
