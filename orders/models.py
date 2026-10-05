@@ -1,6 +1,6 @@
 from django.db import models
 from django.conf import settings
-from core.models import Facility, Medicine
+from core.models import Facility, Medicine, SupplyHub
 
 
 class Order(models.Model):
@@ -42,3 +42,35 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return f"{self.quantity} x {self.medicine.name}"
+
+
+class Delivery(models.Model):
+    METHOD_CHOICES = [
+        ('road', 'Road'),
+        ('drone', 'Drone'),
+    ]
+
+    STATUS_CHOICES = [
+        ('pending', 'Pending Dispatch'),
+        ('dispatched', 'Dispatched'),
+        ('in_transit', 'In Transit'),
+        ('delivered', 'Delivered'),
+        ('failed', 'Failed / Cancelled'),
+    ]
+
+    order = models.OneToOneField(Order, on_delete=models.CASCADE, related_name='delivery')
+    origin_hub = models.ForeignKey(SupplyHub, on_delete=models.SET_NULL, null=True, related_name='deliveries')
+    destination_facility = models.ForeignKey(Facility, on_delete=models.CASCADE, related_name='deliveries')
+    method = models.CharField(max_length=20, choices=METHOD_CHOICES, default='road')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    dispatched_at = models.DateTimeField(null=True, blank=True)
+    delivered_at = models.DateTimeField(null=True, blank=True)
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name_plural = "Deliveries"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Delivery for Order #{self.order.id} ({self.get_status_display()})"

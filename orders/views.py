@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .models import Order
+from .models import Order, Delivery
 from core.models import Facility, SupplyHub
 
 
@@ -15,3 +15,8 @@ def facility_map(request):
         'facilities': facilities,
         'hubs': hubs,
     })
+
+
+def delivery_list(request):
+    deliveries = Delivery.objects.all().order_by('-created_at')
+    return render(request, 'deliveries.html', {'deliveries': deliveries})

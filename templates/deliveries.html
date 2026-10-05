@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Deliveries - MedSupply Kenya</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f6f8;
+        }
+        h1 {
+            color: #1a3d6d;
+            border-bottom: 3px solid #1a3d6d;
+            padding-bottom: 10px;
+        }
+        .delivery-card {
+            background: white;
+            border-left: 6px solid #1a3d6d;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 6px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+        }
+        .delivery-card.drone {
+            border-left-color: #8e44ad;
+        }
+        .delivery-card.road {
+            border-left-color: #2980b9;
+        }
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .header-row h2 {
+            margin: 0;
+            font-size: 18px;
+            color: #333;
+        }
+        .method-badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .method-drone { background: #f3e5f5; color: #8e44ad; }
+        .method-road { background: #e3f2fd; color: #2980b9; }
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px 30px;
+            font-size: 14px;
+            color: #555;
+            margin-bottom: 15px;
+        }
+        .info-grid span {
+            color: #222;
+            font-weight: bold;
+        }
+        .timeline {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            position: relative;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            top: 12px;
+            left: 10px;
+            right: 10px;
+            height: 2px;
+            background: #ddd;
+            z-index: 0;
+        }
+        .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 1;
+            background: white;
+            padding: 0 8px;
+        }
+        .step .dot {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #ddd;
+            border: 3px solid white;
+            box-shadow: 0 0 0 2px #ddd;
+        }
+        .step.done .dot {
+            background: #27ae60;
+            box-shadow: 0 0 0 2px #27ae60;
+        }
+        .step.current .dot {
+            background: #f39c12;
+            box-shadow: 0 0 0 2px #f39c12;
+        }
+        .step .label {
+            font-size: 11px;
+            margin-top: 6px;
+            color: #777;
+            text-align: center;
+        }
+        .step.done .label { color: #27ae60; font-weight: bold; }
+        .step.current .label { color: #f39c12; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>🇰🇪 Delivery Tracking</h1>
+
+    {% for delivery in deliveries %}
+    <div class="delivery-card {{ delivery.method }}">
+        <div class="header-row">
+            <h2>Order #{{ delivery.order.id }} — {{ delivery.destination_facility.name }}</h2>
+            <span class="method-badge method-{{ delivery.method }}">
+                {% if delivery.method == 'drone' %}🚁 Drone{% else %}🚚 Road{% endif %}
+            </span>
+        </div>
+
+        <div class="info-grid">
+            <div>Origin Hub: <span>{{ delivery.origin_hub.name|default:"—" }}</span></div>
+            <div>Destination: <span>{{ delivery.destination_facility.name }}</span></div>
+            <div>Priority: <span>{{ delivery.order.get_priority_display }}</span></div>
+            <div>Created: <span>{{ delivery.created_at|date:"d M Y, H:i" }}</span></div>
+        </div>
+
+        <div class="timeline">
+            <div class="step {% if delivery.status == 'pending' %}current{% elif delivery.status != 'pending' %}done{% endif %}">
+                <div class="dot"></div>
+                <div class="label">Pending</div>
+            </div>
+            <div class="step {% if delivery.status == 'dispatched' %}current{% elif delivery.status == 'in_transit' or delivery.status == 'delivered' %}done{% endif %}">
+                <div class="dot"></div>
+                <div class="label">Dispatched</div>
+            </div>
+            <div class="step {% if delivery.status == 'in_transit' %}current{% elif delivery.status == 'delivered' %}done{% endif %}">
+                <div class="dot"></div>
+                <div class="label">In Transit</div>
+            </div>
+            <div class="step {% if delivery.status == 'delivered' %}done{% endif %}">
+                <div class="dot"></div>
+                <div class="label">Delivered</div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div style="background:white; padding: 40px; text-align:center; color:#888; border-radius: 6px;">
+        No deliveries yet. Create one from the admin panel.
+    </div>
+    {% endfor %}
+</body>
+</html>
