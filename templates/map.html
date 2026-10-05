@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Facility Map - MedSupply Kenya</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        .header {
+            background-color: #1a3d6d;
+            color: white;
+            padding: 15px 20px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        #map {
+            width: 100%;
+            height: calc(100vh - 60px);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">🇰🇪 MedSupply Kenya - Facility Map</div>
+    <div id="map"></div>
+
+    <!-- Leaflet JavaScript -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        // Center map on Kenya
+        var map = L.map('map').setView([-0.0236, 37.9062], 6);
+
+        // Load map tiles from OpenStreetMap with referrer policy
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors',
+            maxZoom: 19,
+            referrerPolicy: 'strict-origin-when-cross-origin'
+        }).addTo(map);
+
+        // Facility data
+        var facilities = [
+            {% for facility in facilities %}
+            {
+                name: "{{ facility.name }}",
+                type: "{{ facility.get_facility_type_display }}",
+                lat: {{ facility.latitude|default:"null" }},
+                lng: {{ facility.longitude|default:"null" }},
+                county: "{{ facility.county.name }}"
+            }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ];
+
+        // Add a marker for each facility
+        facilities.forEach(function(f) {
+            if (f.lat !== null && f.lng !== null) {
+                var marker = L.marker([f.lat, f.lng]).addTo(map);
+                marker.bindPopup(
+                    "<strong>" + f.name + "</strong><br>" +
+                    "Type: " + f.type + "<br>" +
+                    "County: " + f.county
+                );
+            }
+        });
+    </script>
+</body>
+</html>
