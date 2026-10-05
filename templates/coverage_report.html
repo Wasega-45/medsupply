@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Coverage Report - MedSupply Kenya</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f6f8;
+        }
+        h1 {
+            color: #1a3d6d;
+            border-bottom: 3px solid #1a3d6d;
+            padding-bottom: 10px;
+        }
+        .summary {
+            display: flex;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+            flex: 1;
+        }
+        .card h2 {
+            margin: 0;
+            font-size: 14px;
+            color: #666;
+            text-transform: uppercase;
+        }
+        .card p {
+            margin: 8px 0 0;
+            font-size: 32px;
+            font-weight: bold;
+            color: #1a3d6d;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #1a3d6d;
+            color: white;
+        }
+        .covered { color: #2e7d32; font-weight: bold; }
+        .not-covered { color: #c0392b; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>🇰🇪 Coverage Analysis Report</h1>
+
+    <div class="summary">
+        <div class="card">
+            <h2>Total Facilities</h2>
+            <p>{{ total_facilities }}</p>
+        </div>
+        <div class="card">
+            <h2>Covered Facilities</h2>
+            <p>{{ covered_count }}</p>
+        </div>
+        <div class="card">
+            <h2>Coverage %</h2>
+            <p>{{ coverage_percent }}%</p>
+        </div>
+        <div class="card">
+            <h2>Active Hubs</h2>
+            <p>{{ hubs.count }}</p>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Facility</th>
+                <th>Nearest Hub</th>
+                <th>Distance (km)</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in facility_data %}
+            <tr>
+                <td>{{ row.facility.name }}</td>
+                <td>{% if row.nearest_hub %}{{ row.nearest_hub.name }}{% else %}—{% endif %}</td>
+                <td>{% if row.distance_km %}{{ row.distance_km }}{% else %}—{% endif %}</td>
+                <td>
+                    {% if row.is_covered %}
+                        <span class="covered">✓ Covered</span>
+                    {% else %}
+                        <span class="not-covered">✗ Outside Coverage</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" style="text-align:center; padding: 30px; color: #888;">
+                    No facilities registered yet.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

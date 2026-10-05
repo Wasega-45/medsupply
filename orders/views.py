@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from .models import Order
-from core.models import Facility
+from core.models import Facility, SupplyHub
 
 
 def order_list(request):
@@ -10,4 +10,8 @@ def order_list(request):
 
 def facility_map(request):
     facilities = Facility.objects.all()
-    return render(request, 'map.html', {'facilities': facilities})
+    hubs = SupplyHub.objects.filter(active=True)
+    return render(request, 'map.html', {
+        'facilities': facilities,
+        'hubs': hubs,
+    })
