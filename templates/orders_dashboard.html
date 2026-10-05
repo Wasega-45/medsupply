@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Orders Dashboard - MedSupply Kenya</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f6f8;
+        }
+        h1 {
+            color: #1a3d6d;
+            border-bottom: 3px solid #1a3d6d;
+            padding-bottom: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #1a3d6d;
+            color: white;
+        }
+        tr:hover {
+            background-color: #f0f4f8;
+        }
+        .priority-critical { color: #c0392b; font-weight: bold; }
+        .priority-urgent { color: #e67e22; font-weight: bold; }
+        .priority-normal { color: #2e7d32; }
+        .status {
+            padding: 4px 10px;
+            border-radius: 12px;
+            background: #e0e0e0;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🇰🇪 MedSupply Kenya - Orders Dashboard</h1>
+
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Facility</th>
+                <th>Priority</th>
+                <th>Status</th>
+                <th>Requested</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+            <tr>
+                <td>#{{ order.id }}</td>
+                <td>{{ order.facility.name }}</td>
+                <td class="priority-{{ order.priority }}">{{ order.get_priority_display }}</td>
+                <td><span class="status">{{ order.get_status_display }}</span></td>
+                <td>{{ order.requested_at|date:"d M Y, H:i" }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" style="text-align:center; padding: 30px; color: #888;">
+                    No orders yet.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
