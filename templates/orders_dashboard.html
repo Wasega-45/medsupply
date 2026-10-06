@@ -13,11 +13,32 @@
             border-bottom: 3px solid #1a3d6d;
             padding-bottom: 10px;
         }
+        .live-badge {
+            display: inline-block;
+            background: #27ae60;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        .updated {
+            font-size: 12px;
+            color: #666;
+            margin-left: 10px;
+        }
         table {
             width: 100%;
             border-collapse: collapse;
             background: white;
             box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+            margin-top: 15px;
         }
         th, td {
             padding: 12px;
@@ -43,7 +64,11 @@
     </style>
 </head>
 <body>
-    <h1>🇰🇪 MedSupply Kenya - Orders Dashboard</h1>
+    <h1>
+        🇰🇪 MedSupply Kenya - Orders Dashboard
+        <span class="live-badge">● LIVE</span>
+        <span class="updated" id="updated">updating...</span>
+    </h1>
 
     <table>
         <thead>
@@ -55,23 +80,54 @@
                 <th>Requested</th>
             </tr>
         </thead>
-        <tbody>
-            {% for order in orders %}
+        <tbody id="orders-table">
             <tr>
-                <td>#{{ order.id }}</td>
-                <td>{{ order.facility.name }}</td>
-                <td class="priority-{{ order.priority }}">{{ order.get_priority_display }}</td>
-                <td><span class="status">{{ order.get_status_display }}</span></td>
-                <td>{{ order.requested_at|date:"d M Y, H:i" }}</td>
+                <td colspan="5" style="text-align:center; padding:20px; color:#888;">Loading...</td>
             </tr>
-            {% empty %}
-            <tr>
-                <td colspan="5" style="text-align:center; padding: 30px; color: #888;">
-                    No orders yet.
-                </td>
-            </tr>
-            {% endfor %}
         </tbody>
     </table>
+
+    <script>
+        function escapeHtml(text) {
+            var div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function loadOrders() {
+            fetch('/orders/api/')
+                .then(response => response.json())
+                .then(data => {
+                    var tbody = document.getElementById('orders-table');
+                    var html = '';
+
+                    if (data.orders.length === 0) {
+                        html = '<tr><td colspan="5" style="text-align:center; padding:30px; color:#888;">No orders yet.</td></tr>';
+                    } else {
+                        data.orders.forEach(function(o) {
+                            html += '<tr>';
+                            html += '<td>#' + o.id + '</td>';
+                            html += '<td>' + escapeHtml(o.facility) + '</td>';
+                            html += '<td class="priority-' + o.priority_raw + '">' + escapeHtml(o.priority) + '</td>';
+                            html += '<td><span class="status">' + escapeHtml(o.status) + '</span></td>';
+                            html += '<td>' + escapeHtml(o.requested_at) + '</td>';
+                            html += '</tr>';
+                        });
+                    }
+
+                    tbody.innerHTML = html;
+                    document.getElementById('updated').textContent =
+                        'updated ' + new Date().toLocaleTimeString();
+                })
+                .catch(error => {
+                    console.error('Error loading orders:', error);
+                    document.getElementById('updated').textContent = 'update failed';
+                });
+        }
+
+        // Load immediately, then every 5 seconds
+        loadOrders();
+        setInterval(loadOrders, 5000);
+    </script>
 </body>
 </html>

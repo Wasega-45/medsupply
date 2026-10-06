@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.http import JsonResponse
 from .models import Order, Delivery
 from core.models import Facility, SupplyHub
 
@@ -20,3 +21,19 @@ def facility_map(request):
 def delivery_list(request):
     deliveries = Delivery.objects.all().order_by('-created_at')
     return render(request, 'deliveries.html', {'deliveries': deliveries})
+
+
+def orders_api(request):
+    """Return all orders as JSON for the live dashboard."""
+    orders = Order.objects.all().order_by('-requested_at')
+    data = []
+    for o in orders:
+        data.append({
+            'id': o.id,
+            'facility': o.facility.name,
+            'priority': o.get_priority_display(),
+            'priority_raw': o.priority,
+            'status': o.get_status_display(),
+            'requested_at': o.requested_at.strftime('%d %b %Y, %H:%M'),
+        })
+    return JsonResponse({'orders': data, 'count': len(data)})
