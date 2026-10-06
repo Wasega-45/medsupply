@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import County, Facility, Medicine, Inventory, SupplyHub
+from .models import County, Facility, Medicine, Inventory, SupplyHub, Drone
 
 
 @admin.register(County)
@@ -34,3 +34,10 @@ class SupplyHubAdmin(admin.ModelAdmin):
     list_display = ('name', 'county', 'service_radius_km', 'active')
     list_filter = ('county', 'active')
     search_fields = ('name', 'location')
+
+
+@admin.register(Drone)
+class DroneAdmin(admin.ModelAdmin):
+    list_display = ('identifier', 'operator', 'status', 'home_hub', 'active', 'last_update')
+    list_filter = ('status', 'active', 'home_hub')
+    search_fields = ('identifier', 'operator')

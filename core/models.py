@@ -4,7 +4,7 @@ from math import radians, sin, cos, sqrt, atan2
 
 def haversine_distance(lat1, lon1, lat2, lon2):
     """Calculate the distance in kilometers between two lat/lng points."""
-    R = 6371  # Earth's radius in km
+    R = 6371
 
     lat1_r, lon1_r = radians(float(lat1)), radians(float(lon1))
     lat2_r, lon2_r = radians(float(lat2)), radians(float(lon2))
@@ -60,7 +60,6 @@ class Facility(models.Model):
         return f"{self.name} ({self.get_facility_type_display()})"
 
     def nearest_hub(self):
-        """Find the nearest active supply hub and the distance in km."""
         hubs = SupplyHub.objects.filter(active=True)
         nearest = None
         min_dist = None
@@ -77,7 +76,6 @@ class Facility(models.Model):
         return nearest, min_dist
 
     def is_covered(self):
-        """Check if this facility is within the nearest hub's service radius."""
         hub, dist = self.nearest_hub()
         if hub is None or dist is None:
             return False
@@ -129,3 +127,28 @@ class SupplyHub(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.county.name})"
+
+
+class Drone(models.Model):
+    STATUS_CHOICES = [
+        ('idle', 'Idle'),
+        ('in_transit', 'In Transit'),
+        ('delivering', 'Delivering'),
+        ('returning', 'Returning'),
+        ('offline', 'Offline'),
+    ]
+
+    identifier = models.CharField(max_length=50, unique=True)
+    operator = models.CharField(max_length=150, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='idle')
+    home_hub = models.ForeignKey(SupplyHub, on_delete=models.SET_NULL, null=True, blank=True, related_name='drones')
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    active = models.BooleanField(default=True)
+    last_update = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['identifier']
+
+    def __str__(self):
+        return f"{self.identifier} ({self.get_status_display()})"
