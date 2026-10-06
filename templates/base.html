@@ -1,0 +1,45 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}MedSupply Kenya{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <div class="layout">
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="brand">
+                <h2>🇰🇪 MedSupply Kenya</h2>
+                <p>Medical Supply & Drone Logistics</p>
+            </div>
+            <nav>
+                <a href="{% url 'home' %}" class="{% if active == 'home' %}active{% endif %}">🏠 Dashboard</a>
+                <a href="{% url 'facility_map' %}" class="{% if active == 'map' %}active{% endif %}">🗺️ Map &amp; GIS</a>
+                <a href="{% url 'order_list' %}" class="{% if active == 'orders' %}active{% endif %}">📋 Orders</a>
+                <a href="{% url 'delivery_list' %}" class="{% if active == 'deliveries' %}active{% endif %}">🚚 Deliveries</a>
+                <a href="{% url 'coverage_report' %}" class="{% if active == 'coverage' %}active{% endif %}">📊 Coverage Analysis</a>
+                <a href="/admin/" class="{% if active == 'admin' %}active{% endif %}">⚙️ Admin Panel</a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            {% block content %}{% endblock %}
+
+            <!-- Footer -->
+            <div class="footer">
+                <span>© 2026 MedSupply Kenya — A GIS-Based Medical Supply &amp; Drone Delivery System</span>
+                <br>
+                <a href="{% url 'about' %}">About</a>
+                <a href="{% url 'terms' %}">Terms of Service</a>
+                <a href="{% url 'privacy' %}">Privacy Policy</a>
+            </div>
+        </main>
+
+    </div>
+</body>
+</html>

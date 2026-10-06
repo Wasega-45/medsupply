@@ -1,11 +1,40 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>MedSupply Kenya</title>
-</head>
-<body>
-    <h1>🇰🇪 MedSupply Kenya</h1>
-    <p>Real-Time GIS-Based Medical Supply and Drone Delivery Management System</p>
-    <p>Status: <strong>Under construction</strong></p>
-</body>
-</html>
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - MedSupply Kenya{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Dashboard</h1>
+    <p>Welcome to MedSupply Kenya — Real-Time Medical Supply &amp; Drone Delivery Management</p>
+</div>
+
+<div class="kpi-grid">
+    <div class="kpi">
+        <div class="label">Quick Links</div>
+        <div class="value" style="font-size: 16px; margin-top: 12px;">
+            <a href="{% url 'facility_map' %}" style="color: #14b8a6; text-decoration: none;">🗺️ View Map</a><br>
+            <a href="{% url 'order_list' %}" style="color: #14b8a6; text-decoration: none;">📋 Orders</a><br>
+            <a href="{% url 'delivery_list' %}" style="color: #14b8a6; text-decoration: none;">🚚 Deliveries</a><br>
+            <a href="{% url 'coverage_report' %}" style="color: #14b8a6; text-decoration: none;">📊 Coverage</a>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <h2 style="color: #0d3b45; margin-bottom: 12px;">About the System</h2>
+    <p>
+        MedSupply Kenya is a web-based platform that helps health facilities across Kenyan
+        counties request medical supplies, manage inventory, and coordinate delivery logistics —
+        including drone-supported delivery where an authorised service is available.
+    </p>
+    <p style="margin-top: 12px;">
+        Use the sidebar to navigate the system. Authorised users can view maps, place orders,
+        track deliveries, and analyse coverage.
+    </p>
+</div>
+
+<div class="card">
+    <h2 style="color: #0d3b45; margin-bottom: 12px;">System Status</h2>
+    <p><span class="badge badge-green">● Operational</span> — All core modules are running normally.</p>
+</div>
+{% endblock %}

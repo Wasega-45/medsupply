@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}About - MedSupply Kenya{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>About MedSupply Kenya</h1>
+    <p>Real-Time GIS-Based Medical Supply and Drone Delivery Management System</p>
+</div>
+
+<div class="card">
+    <h2 style="color: #0d3b45; margin-bottom: 12px;">What is MedSupply Kenya?</h2>
+    <p>
+        MedSupply Kenya is a web-based platform that helps health facilities across Kenyan counties
+        request medical supplies, manage inventory, and coordinate delivery logistics — including
+        drone-supported delivery where an authorised service is available.
+    </p>
+</div>
+
+<div class="card">
+    <h2 style="color: #0d3b45; margin-bottom: 12px;">Who is it for?</h2>
+    <ul style="padding-left: 20px; line-height: 1.8;">
+        <li><strong>Health facilities</strong> — submit supply requests and track progress</li>
+        <li><strong>Supply and logistics officers</strong> — manage inventory, approve requests, coordinate deliveries</li>
+        <li><strong>County administrators</strong> — manage county data, users, and dashboards</li>
+        <li><strong>National administrators</strong> — oversee all counties and system-wide settings</li>
+        <li><strong>Monitoring operators</strong> — view active deliveries, maps, and alerts</li>
+    </ul>
+</div>
+
+<div class="card">
+    <h2 style="color: #0d3b45; margin-bottom: 12px;">What the system does</h2>
+    <ul style="padding-left: 20px; line-height: 1.8;">
+        <li>Records supply requests from health facilities in real time</li>
+        <li>Manages inventory, stock levels, and reservations</li>
+        <li>Uses GIS mapping to display facilities, supply hubs, and coverage areas</li>
+        <li>Calculates distances, service coverage, and identifies underserved areas</li>
+        <li>Tracks delivery status from approval to receipt</li>
+        <li>Supports drone delivery monitoring where an authorised integration is available</li>
+        <li>Provides dashboards for county and national oversight</li>
+    </ul>
+</div>
+
+<div class="card">
+    <h2 style="color: #0d3b45; margin-bottom: 12px;">What the system does NOT do</h2>
+    <ul style="padding-left: 20px; line-height: 1.8;">
+        <li>It does <strong>not</strong> provide medical advice or clinical decisions</li>
+        <li>It does <strong>not</strong> store patient-identifiable information</li>
+        <li>It does <strong>not</strong> directly control drones — only monitors authorised telemetry where available</li>
+        <li>It <strong>supports</strong> qualified clinical, logistics, and aviation decisions — it does not replace them</li>
+    </ul>
+</div>
+
+<div class="card">
+    <h2 style="color: #0d3b45; margin-bottom: 12px;">Multi-County Design</h2>
+    <p>
+        The platform is designed to support all 47 Kenyan counties. Kisumu is currently used as
+        a pilot dataset. Any county can be added by registering its facilities, hubs, and
+        administrative boundaries as configuration data — no code changes are required.
+    </p>
+</div>
+{% endblock %}

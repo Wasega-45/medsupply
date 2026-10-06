@@ -1,74 +1,96 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Facility Map - MedSupply Kenya</title>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+{% extends 'base.html' %}
+{% load static %}
 
-    <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+{% block title %}Facility Map - MedSupply Kenya{% endblock %}
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
+{% block content %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+    #map {
+        width: 100%;
+        height: 600px;
+        border-radius: 8px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        margin-top: 15px;
+    }
+</style>
+
+<div class="page-header">
+    <h1>Facility Map &amp; GIS</h1>
+    <p>Interactive map showing registered health facilities and supply hubs</p>
+</div>
+
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    var map = L.map('map').setView([-0.0236, 37.9062], 6);
+
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors',
+        maxZoom: 19,
+        referrerPolicy: 'strict-origin-when-cross-origin'
+    }).addTo(map);
+
+    var facilities = [
+        {% for facility in facilities %}
+        {
+            name: "{{ facility.name }}",
+            type: "{{ facility.get_facility_type_display }}",
+            lat: {{ facility.latitude|default:"null" }},
+            lng: {{ facility.longitude|default:"null" }},
+            county: "{{ facility.county.name }}"
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ];
+
+    var hubs = [
+        {% for hub in hubs %}
+        {
+            name: "{{ hub.name }}",
+            lat: {{ hub.latitude }},
+            lng: {{ hub.longitude }},
+            radius: {{ hub.service_radius_km }}
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ];
+
+    // Facility markers (blue)
+    facilities.forEach(function(f) {
+        if (f.lat !== null && f.lng !== null) {
+            var marker = L.marker([f.lat, f.lng]).addTo(map);
+            marker.bindPopup(
+                "<strong>" + f.name + "</strong><br>" +
+                "Type: " + f.type + "<br>" +
+                "County: " + f.county
+            );
         }
-        .header {
-            background-color: #1a3d6d;
-            color: white;
-            padding: 15px 20px;
-            font-size: 20px;
-            font-weight: bold;
-        }
-        #map {
-            width: 100%;
-            height: calc(100vh - 60px);
-        }
-    </style>
-</head>
-<body>
-    <div class="header">🇰🇪 MedSupply Kenya - Facility Map</div>
-    <div id="map"></div>
+    });
 
-    <!-- Leaflet JavaScript -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-    <script>
-        // Center map on Kenya
-        var map = L.map('map').setView([-0.0236, 37.9062], 6);
-
-        // Load map tiles from OpenStreetMap with referrer policy
-        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors',
-            maxZoom: 19,
-            referrerPolicy: 'strict-origin-when-cross-origin'
+    // Hub markers with service area circles (green)
+    hubs.forEach(function(h) {
+        var hubMarker = L.marker([h.lat, h.lng], {
+            icon: L.divIcon({
+                className: 'custom-hub-marker',
+                html: '<div style="background: #14b8a6; width: 18px; height: 18px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 0 2px #14b8a6;"></div>',
+                iconSize: [24, 24],
+                iconAnchor: [12, 12]
+            })
         }).addTo(map);
 
-        // Facility data
-        var facilities = [
-            {% for facility in facilities %}
-            {
-                name: "{{ facility.name }}",
-                type: "{{ facility.get_facility_type_display }}",
-                lat: {{ facility.latitude|default:"null" }},
-                lng: {{ facility.longitude|default:"null" }},
-                county: "{{ facility.county.name }}"
-            }{% if not forloop.last %},{% endif %}
-            {% endfor %}
-        ];
+        hubMarker.bindPopup(
+            "<strong>" + h.name + "</strong><br>" +
+            "Service radius: " + h.radius + " km"
+        );
 
-        // Add a marker for each facility
-        facilities.forEach(function(f) {
-            if (f.lat !== null && f.lng !== null) {
-                var marker = L.marker([f.lat, f.lng]).addTo(map);
-                marker.bindPopup(
-                    "<strong>" + f.name + "</strong><br>" +
-                    "Type: " + f.type + "<br>" +
-                    "County: " + f.county
-                );
-            }
-        });
-    </script>
-</body>
-</html>
+        // Draw the service-area circle
+        L.circle([h.lat, h.lng], {
+            color: '#14b8a6',
+            fillColor: '#14b8a6',
+            fillOpacity: 0.08,
+            weight: 2,
+            radius: h.radius * 1000  // metres
+        }).addTo(map);
+    });
+</script>
+{% endblock %}
