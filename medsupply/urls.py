@@ -25,7 +25,8 @@ urlpatterns = [
 
     # Facility dashboard
     path('dashboard/', order_views.facility_dashboard, name='facility_dashboard'),
-
+    path('order/new/', order_views.place_order, name='place_order'),
+    
     # Main pages
     path('', views.home, name='home'),
     path('about/', views.about, name='about'),

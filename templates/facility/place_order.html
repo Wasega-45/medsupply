@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block title %}Place Order - MedSupply Kenya{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Place New Order</h1>
+    <p>{{ facility.name }} — {{ facility.county.name }} County</p>
+</div>
+
+{% if messages %}
+    {% for message in messages %}
+    <div style="background: #d1fae5; color: #065f46; padding: 12px; border-radius: 6px; margin-bottom: 20px;">
+        {{ message }}
+    </div>
+    {% endfor %}
+{% endif %}
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
+
+    <!-- Order form -->
+    <div class="card">
+        <form method="post">
+            {% csrf_token %}
+
+            <!-- Priority and Notes -->
+            <h2 style="color: #0d3b45; font-size: 18px; margin-bottom: 15px;">Order Details</h2>
+
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px;">Priority *</label>
+                {{ form.priority }}
+            </div>
+
+            <div style="margin-bottom: 25px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px;">Notes</label>
+                {{ form.notes }}
+            </div>
+
+            <!-- Order items -->
+            <h2 style="color: #0d3b45; font-size: 18px; margin-bottom: 15px;">Medicines Requested</h2>
+
+            {{ formset.management_form }}
+
+            <table style="margin-bottom: 15px;">
+                <thead>
+                    <tr>
+                        <th>Medicine</th>
+                        <th style="width: 120px;">Quantity</th>
+                        <th style="width: 80px;">Remove</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item_form in formset %}
+                    <tr>
+                        <td>
+                            {{ item_form.id }}
+                            {{ item_form.medicine }}
+                        </td>
+                        <td>{{ item_form.quantity }}</td>
+                        <td style="text-align: center;">
+                            {% if item_form.instance.pk %}
+                                {{ item_form.DELETE }}
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <div style="margin-top: 25px; display: flex; gap: 10px;">
+                <button type="submit"
+                        style="background: #14b8a6; color: white; padding: 12px 30px; border: none; border-radius: 6px; font-size: 15px; font-weight: bold; cursor: pointer;">
+                    Submit Order
+                </button>
+                <a href="{% url 'facility_dashboard' %}"
+                   style="background: #e5e7eb; color: #374151; padding: 12px 30px; border-radius: 6px; font-size: 15px; font-weight: bold; text-decoration: none;">
+                    Cancel
+                </a>
+            </div>
+
+        </form>
+    </div>
+
+    <!-- Current stock sidebar -->
+    <div class="card" style="align-self: start;">
+        <h2 style="color: #0d3b45; font-size: 16px; margin-bottom: 15px;">Your Current Stock</h2>
+
+        {% if inventory %}
+        <table>
+            <thead>
+                <tr>
+                    <th style="font-size: 12px;">Medicine</th>
+                    <th style="font-size: 12px;">Qty</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in inventory %}
+                <tr>
+                    <td style="font-size: 13px;">{{ item.medicine.name }}</td>
+                    <td style="font-size: 13px; font-weight: bold;">{{ item.quantity }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p style="color: #7f8c8d; font-size: 14px;">No stock recorded yet.</p>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}
