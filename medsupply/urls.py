@@ -23,6 +23,9 @@ urlpatterns = [
     path('register/hub/', account_views.register_hub, name='register_hub'),
     path('pending/', account_views.pending_approval, name='pending_approval'),
 
+    # Facility dashboard
+    path('dashboard/', order_views.facility_dashboard, name='facility_dashboard'),
+
     # Main pages
     path('', views.home, name='home'),
     path('about/', views.about, name='about'),

@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+
+{% block title %}Facility Dashboard - MedSupply Kenya{% endblock %}
+
+{% block content %}
+
+{% if facility %}
+<div class="page-header">
+    <h1>{{ facility.name }}</h1>
+    <p>{{ facility.get_facility_type_display }} · {{ facility.county.name }} County</p>
+</div>
+
+<div class="kpi-grid">
+    <div class="kpi">
+        <div class="label">Total Orders</div>
+        <div class="value">{{ total_orders }}</div>
+    </div>
+    <div class="kpi">
+        <div class="label">Pending</div>
+        <div class="value" style="color: #e67e22;">{{ pending_orders }}</div>
+    </div>
+    <div class="kpi">
+        <div class="label">Delivered</div>
+        <div class="value" style="color: #27ae60;">{{ delivered_orders }}</div>
+    </div>
+    <div class="kpi">
+        <div class="label">Stock Items</div>
+        <div class="value">{{ total_stock_items }}</div>
+    </div>
+</div>
+
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <h2 style="color: #0d3b45; font-size: 18px;">Recent Orders</h2>
+        <a href="#" style="background: #14b8a6; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 14px;">
+            + Place New Order
+        </a>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Priority</th>
+                <th>Status</th>
+                <th>Requested</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+            <tr>
+                <td>#{{ order.id }}</td>
+                <td class="priority-{{ order.priority }}">{{ order.get_priority_display }}</td>
+                <td><span class="badge badge-gray">{{ order.get_status_display }}</span></td>
+                <td>{{ order.requested_at|date:"d M Y, H:i" }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" style="text-align:center; padding: 30px; color: #888;">
+                    You haven't placed any orders yet.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="card">
+    <h2 style="color: #0d3b45; font-size: 18px; margin-bottom: 15px;">Current Inventory</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Medicine</th>
+                <th>Unit</th>
+                <th>Available</th>
+                <th>Reserved</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in inventory %}
+            <tr>
+                <td>{{ item.medicine.name }}</td>
+                <td>{{ item.medicine.unit }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>{{ item.reserved_quantity }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" style="text-align:center; padding: 30px; color: #888;">
+                    No inventory recorded for this facility yet.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% else %}
+<div class="page-header">
+    <h1>Facility Dashboard</h1>
+</div>
+
+<div class="card" style="text-align: center; padding: 40px;">
+    <div style="font-size: 60px; margin-bottom: 20px;">⚠️</div>
+    <h2 style="color: #0d3b45; margin-bottom: 15px;">No facility linked to your account</h2>
+    <p style="color: #7f8c8d;">
+        Your user account is not linked to a health facility. Please contact your County Administrator.
+    </p>
+</div>
+{% endif %}
+
+{% endblock %}

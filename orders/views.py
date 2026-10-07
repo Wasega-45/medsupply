@@ -1,7 +1,8 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
-from .models import Order, Delivery
-from core.models import Facility, SupplyHub
+from .models import Order, OrderItem, Delivery
+from core.models import Facility, SupplyHub, Inventory
 
 
 def order_list(request):
@@ -37,3 +38,50 @@ def orders_api(request):
             'requested_at': o.requested_at.strftime('%d %b %Y, %H:%M'),
         })
     return JsonResponse({'orders': data, 'count': len(data)})
+
+
+@login_required
+def facility_dashboard(request):
+    """Dashboard shown to facility users after login."""
+
+    # Guard: only facility users should land here
+    if request.user.role != 'facility':
+        return redirect('post_login_redirect')
+
+    # The user's linked facility
+    facility = request.user.facility
+
+    if facility is None:
+        # User is a facility user but hasn't been linked to one yet
+        return render(request, 'facility/dashboard.html', {
+            'facility': None,
+            'orders': [],
+            'inventory': [],
+            'total_orders': 0,
+            'pending_orders': 0,
+            'delivered_orders': 0,
+            'total_stock_items': 0,
+        })
+
+    # All orders for this facility, most recent first
+    orders = Order.objects.filter(facility=facility).order_by('-requested_at')
+
+    # Inventory for this facility
+    inventory = Inventory.objects.filter(facility=facility).select_related('medicine')
+
+    # KPI calculations
+    total_orders = orders.count()
+    pending_orders = orders.filter(status='pending').count()
+    delivered_orders = orders.filter(status='delivered').count()
+    total_stock_items = sum(inv.quantity for inv in inventory)
+
+    context = {
+        'facility': facility,
+        'orders': orders,
+        'inventory': inventory,
+        'total_orders': total_orders,
+        'pending_orders': pending_orders,
+        'delivered_orders': delivered_orders,
+        'total_stock_items': total_stock_items,
+    }
+    return render(request, 'facility/dashboard.html', context)
