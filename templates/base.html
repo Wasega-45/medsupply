@@ -14,7 +14,7 @@
         <aside class="sidebar">
             <div class="brand">
                 <h2>🇰🇪 MedSupply Kenya</h2>
-                <p>Medical Supply & Drone Logistics</p>
+                <p>Medical Supply &amp; Drone Logistics</p>
             </div>
             <nav>
                 <a href="{% url 'home' %}" class="{% if active == 'home' %}active{% endif %}">🏠 Dashboard</a>
@@ -24,6 +24,24 @@
                 <a href="{% url 'coverage_report' %}" class="{% if active == 'coverage' %}active{% endif %}">📊 Coverage Analysis</a>
                 <a href="/admin/" class="{% if active == 'admin' %}active{% endif %}">⚙️ Admin Panel</a>
             </nav>
+
+            <div style="padding: 20px; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 20px;">
+                {% if user.is_authenticated %}
+                <div style="font-size: 13px; color: #8fbcb5; margin-bottom: 10px;">
+                    Signed in as<br>
+                    <strong style="color: #14b8a6;">{{ user.username }}</strong>
+                </div>
+                <form method="post" action="{% url 'logout' %}">
+                    {% csrf_token %}
+                    <button type="submit"
+                            style="background: transparent; color: #cbd5d8; border: 1px solid rgba(255,255,255,0.2); padding: 8px 14px; border-radius: 4px; font-size: 13px; cursor: pointer; width: 100%;">
+                        Sign Out
+                    </button>
+                </form>
+                {% else %}
+                <a href="{% url 'login' %}" style="color: #14b8a6; text-decoration: none; font-size: 14px;">Sign In →</a>
+                {% endif %}
+            </div>
         </aside>
 
         <!-- Main Content -->

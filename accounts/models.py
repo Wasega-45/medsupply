@@ -35,6 +35,18 @@ class User(AbstractUser):
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='facility')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     phone = models.CharField(max_length=20, blank=True)
+    facility = models.ForeignKey(
+        'core.Facility',
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='users',
+    )
+    hub = models.ForeignKey(
+        'core.SupplyHub',
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='users',
+    )
 
     def __str__(self):
         return f"{self.username} ({self.get_role_display()})"

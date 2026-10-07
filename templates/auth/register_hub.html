@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% block title %}Register Hub - MedSupply Kenya{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Register a Supply Hub Account</h1>
+    <p>Create an account to manage inventory and dispatch for your hub</p>
+</div>
+
+<div class="card" style="max-width: 640px;">
+
+    <div style="background: #dbeafe; color: #1e40af; padding: 12px; border-radius: 6px; margin-bottom: 20px; font-size: 14px;">
+        <strong>Note:</strong> Your account will need approval by a National Administrator before you can manage inventory or dispatch orders.
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+
+        {% if form.errors %}
+        <div style="background: #fecaca; color: #991b1b; padding: 12px; border-radius: 6px; margin-bottom: 20px; font-size: 14px;">
+            <strong>Please fix the following:</strong>
+            <ul style="margin-top: 6px; padding-left: 20px;">
+                {% for field, errors in form.errors.items %}
+                    {% for error in errors %}
+                    <li>{{ field }}: {{ error }}</li>
+                    {% endfor %}
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+
+            <div>
+                <label style="display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px;">Username *</label>
+                {{ form.username }}
+            </div>
+
+            <div>
+                <label style="display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px;">Email *</label>
+                {{ form.email }}
+            </div>
+
+            <div>
+                <label style="display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px;">Full Name *</label>
+                {{ form.first_name }}
+            </div>
+
+            <div>
+                <label style="display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px;">Phone</label>
+                {{ form.phone }}
+            </div>
+
+            <div style="grid-column: 1 / -1;">
+                <label style="display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px;">Supply Hub *</label>
+                {{ form.hub }}
+            </div>
+
+            <div>
+                <label style="display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px;">Password *</label>
+                {{ form.password1 }}
+            </div>
+
+            <div>
+                <label style="display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px;">Confirm Password *</label>
+                {{ form.password2 }}
+            </div>
+
+        </div>
+
+        <button type="submit"
+                style="background: #14b8a6; color: white; padding: 12px 30px; border: none; border-radius: 6px; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 20px;">
+            Register
+        </button>
+
+    </form>
+
+    <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #ecf0f1; font-size: 14px;">
+        Already have an account? <a href="{% url 'login' %}" style="color: #14b8a6;">Sign in</a>
+    </div>
+</div>
+{% endblock %}

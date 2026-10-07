@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}Login - MedSupply Kenya{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Sign In</h1>
+    <p>Access your MedSupply Kenya account</p>
+</div>
+
+<div class="card" style="max-width: 480px;">
+    {% if form.errors %}
+    <div style="background: #fecaca; color: #991b1b; padding: 12px; border-radius: 6px; margin-bottom: 15px;">
+        Your username or password was incorrect. Please try again.
+    </div>
+    {% endif %}
+
+    {% if next %}
+        {% if user.is_authenticated %}
+        <div style="background: #fed7aa; color: #9a3412; padding: 12px; border-radius: 6px; margin-bottom: 15px;">
+            Your account doesn't have access to this page. Please log in with an authorised account.
+        </div>
+        {% else %}
+        <div style="background: #dbeafe; color: #1e40af; padding: 12px; border-radius: 6px; margin-bottom: 15px;">
+            Please log in to access this page.
+        </div>
+        {% endif %}
+    {% endif %}
+
+    <form method="post" action="{% url 'login' %}">
+        {% csrf_token %}
+
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px;">Username</label>
+            <input type="text" name="username" autofocus required
+                   style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px;">
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px;">Password</label>
+            <input type="password" name="password" required
+                   style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px;">
+        </div>
+
+        <button type="submit"
+                style="background: #14b8a6; color: white; padding: 12px 24px; border: none; border-radius: 6px; font-size: 15px; font-weight: bold; cursor: pointer;">
+            Sign In
+        </button>
+
+        <input type="hidden" name="next" value="{{ next }}">
+    </form>
+
+    <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #ecf0f1; font-size: 14px;">
+        Don't have an account?
+        <a href="{% url 'register_facility' %}" style="color: #14b8a6;">Register a facility</a> or
+        <a href="{% url 'register_hub' %}" style="color: #14b8a6;">register a hub</a>
+    </div>
+</div>
+{% endblock %}
