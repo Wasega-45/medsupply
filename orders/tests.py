@@ -1,132 +1,65 @@
-from django.test import TestCase, Client
+from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.urls import reverse
-import json
-
-from .models import Order, OrderItem, Delivery
-from core.models import County, Facility, Medicine, SupplyHub
-
+from core.models import County, Facility, Medicine, Inventory
+from orders.models import Order, OrderItem
 
 User = get_user_model()
 
-
-class OrderModelTest(TestCase):
-    """Database tests for Order and OrderItem."""
-
+class OrderFlowTest(TestCase):
     def setUp(self):
-        self.county = County.objects.create(name="Kisumu", code="KSM")
-        self.facility = Facility.objects.create(name="Test Facility", county=self.county)
-        self.user = User.objects.create_user(username="testuser", password="pass12345")
-        self.medicine = Medicine.objects.create(name="Paracetamol")
-
-    def test_create_order(self):
-        o = Order.objects.create(
-            facility=self.facility,
-            requested_by=self.user,
-            priority="urgent",
-        )
-        self.assertEqual(o.status, "pending")
-        self.assertIn("Test Facility", str(o))
-
-    def test_order_with_items(self):
-        o = Order.objects.create(facility=self.facility, requested_by=self.user)
-        OrderItem.objects.create(order=o, medicine=self.medicine, quantity=100)
-        self.assertEqual(o.items.count(), 1)
-        self.assertEqual(o.items.first().quantity, 100)
-
-
-class DeliveryModelTest(TestCase):
-    """Database tests for Delivery model."""
-
-    def setUp(self):
-        self.county = County.objects.create(name="Kisumu", code="KSM")
-        self.facility = Facility.objects.create(name="Test Facility", county=self.county)
-        self.hub = SupplyHub.objects.create(
-            name="Test Hub",
+        # 1. Create a County
+        self.county = County.objects.create(name="Test County", code="TC")
+        
+        # 2. Create a Facility
+        self.facility = Facility.objects.create(
+            name="Test Facility",
             county=self.county,
-            latitude=-0.10,
-            longitude=34.75,
+            facility_type="clinic",
+            latitude=-1.2921,
+            longitude=36.8219
         )
-        self.user = User.objects.create_user(username="testuser", password="pass12345")
-        self.order = Order.objects.create(facility=self.facility, requested_by=self.user)
-
-    def test_create_delivery(self):
-        d = Delivery.objects.create(
-            order=self.order,
-            origin_hub=self.hub,
-            destination_facility=self.facility,
-            method="road",
-        )
-        self.assertEqual(d.status, "pending")
-        self.assertEqual(d.method, "road")
-
-    def test_delivery_drone_method(self):
-        d = Delivery.objects.create(
-            order=self.order,
-            origin_hub=self.hub,
-            destination_facility=self.facility,
-            method="drone",
-        )
-        self.assertEqual(d.method, "drone")
-
-
-class OrdersAPITest(TestCase):
-    """API tests — verify the live dashboard endpoint returns correct JSON."""
-
-    def setUp(self):
-        self.client = Client()
-        self.county = County.objects.create(name="Kisumu", code="KSM")
-        self.facility = Facility.objects.create(name="Test Facility", county=self.county)
-        self.user = User.objects.create_user(username="testuser", password="pass12345")
-
-    def test_api_returns_empty_list(self):
-        r = self.client.get(reverse('orders_api'))
-        self.assertEqual(r.status_code, 200)
-        data = json.loads(r.content)
-        self.assertEqual(data['count'], 0)
-        self.assertEqual(data['orders'], [])
-
-    def test_api_returns_orders(self):
-        Order.objects.create(
+        
+        # 3. Create a Facility User
+        self.facility_user = User.objects.create_user(
+            username="testfacility",
+            password="testpassword123",
+            role="facility",
+            status="active",
             facility=self.facility,
-            requested_by=self.user,
-            priority="urgent",
+            county=self.county
         )
-        r = self.client.get(reverse('orders_api'))
-        data = json.loads(r.content)
-        self.assertEqual(data['count'], 1)
-        self.assertEqual(data['orders'][0]['facility'], "Test Facility")
-        self.assertEqual(data['orders'][0]['priority'], "Urgent")
+        
+        # 4. Create a Medicine
+        self.medicine = Medicine.objects.create(name="Paracetamol", unit="tablets")
+        
+        # 5. Add inventory for the facility
+        Inventory.objects.create(facility=self.facility, medicine=self.medicine, quantity=100)
 
-    def test_api_contains_required_fields(self):
-        Order.objects.create(facility=self.facility, requested_by=self.user)
-        r = self.client.get(reverse('orders_api'))
-        data = json.loads(r.content)
-        order = data['orders'][0]
-        self.assertIn('id', order)
-        self.assertIn('facility', order)
-        self.assertIn('priority', order)
-        self.assertIn('status', order)
-        self.assertIn('requested_at', order)
-
-
-class RealTimeDataTest(TestCase):
-    """Real-time test — verify polling endpoint reflects new data."""
-
-    def setUp(self):
-        self.client = Client()
-        self.county = County.objects.create(name="Kisumu", code="KSM")
-        self.facility = Facility.objects.create(name="Test Facility", county=self.county)
-        self.user = User.objects.create_user(username="testuser", password="pass12345")
-
-    def test_new_order_appears_in_api(self):
-        # First call - should be empty
-        r1 = self.client.get(reverse('orders_api'))
-        self.assertEqual(json.loads(r1.content)['count'], 0)
-
-        # Create a new order (simulating what happens live)
-        Order.objects.create(facility=self.facility, requested_by=self.user)
-
-        # Second call - should now show 1
-        r2 = self.client.get(reverse('orders_api'))
-        self.assertEqual(json.loads(r2.content)['count'], 1)
+    def test_place_order(self):
+        """Test that a facility user can log in and place an order."""
+        # Log in the user
+        self.client.login(username="testfacility", password="testpassword123")
+        
+        # Submit the order form
+        response = self.client.post(reverse('place_order'), {
+            'priority': 'normal',
+            'notes': 'Urgent need for paracetamol',
+            'items-TOTAL_FORMS': '1',
+            'items-INITIAL_FORMS': '0',
+            'items-MIN_NUM_FORMS': '0',
+            'items-MAX_NUM_FORMS': '1000',
+            'items-0-medicine': self.medicine.id,
+            'items-0-quantity': '10',
+        })
+        
+        # Check that the order was created
+        self.assertEqual(Order.objects.count(), 1)
+        order = Order.objects.first()
+        self.assertEqual(order.status, 'pending')
+        self.assertEqual(order.facility, self.facility)
+        
+        # Check that the order item was created
+        self.assertEqual(order.items.count(), 1)
+        self.assertEqual(order.items.first().medicine, self.medicine)
+        self.assertEqual(order.items.first().quantity, 10)

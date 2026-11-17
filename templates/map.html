@@ -13,11 +13,25 @@
         box-shadow: 0 1px 4px rgba(0,0,0,0.06);
         margin-top: 15px;
     }
+    .drone-icon {
+        background: #f59e0b;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        border: 3px solid white;
+        box-shadow: 0 0 0 2px #f59e0b;
+        animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
+        70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); }
+        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+    }
 </style>
 
 <div class="page-header">
     <h1>Facility Map &amp; GIS</h1>
-    <p>Interactive map showing registered health facilities and supply hubs</p>
+    <p>Interactive map showing registered health facilities, supply hubs, and active drones</p>
 </div>
 
 <div id="map"></div>
@@ -83,14 +97,60 @@
             "Service radius: " + h.radius + " km"
         );
 
-        // Draw the service-area circle
         L.circle([h.lat, h.lng], {
             color: '#14b8a6',
             fillColor: '#14b8a6',
             fillOpacity: 0.08,
             weight: 2,
-            radius: h.radius * 1000  // metres
+            radius: h.radius * 1000
         }).addTo(map);
     });
+
+    // --- DRONE SIMULATION LOGIC ---
+    var droneMarkers = {};
+
+    function fetchDrones() {
+        // Ping the backend to simulate movement
+        fetch('/logistics/api/simulate-drones/')
+            .then(response => response.json())
+            .then(data => {
+                // Now fetch the updated drone positions
+                return fetch('/logistics/api/drones/');
+            })
+            .then(response => response.json())
+            .then(data => {
+                updateDroneMarkers(data.drones);
+            })
+            .catch(error => console.error('Error fetching drones:', error));
+    }
+
+    function updateDroneMarkers(drones) {
+        drones.forEach(function(d) {
+            if (d.lat && d.lng) {
+                if (droneMarkers[d.id]) {
+                    // Move existing marker
+                    droneMarkers[d.id].setLatLng([d.lat, d.lng]);
+                } else {
+                    // Create new marker
+                    var marker = L.marker([d.lat, d.lng], {
+                        icon: L.divIcon({
+                            className: 'custom-drone-marker',
+                            html: '<div class="drone-icon"></div>',
+                            iconSize: [22, 22],
+                            iconAnchor: [11, 11]
+                        })
+                    }).addTo(map);
+                    
+                    marker.bindPopup("<strong>Drone: " + d.identifier + "</strong><br>Status: " + d.status);
+                    droneMarkers[d.id] = marker;
+                }
+            }
+        });
+    }
+
+    // Run simulation ping every 3 seconds
+    setInterval(fetchDrones, 3000);
+    // Initial fetch
+    fetchDrones();
 </script>
 {% endblock %}

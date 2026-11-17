@@ -47,6 +47,8 @@ class User(AbstractUser):
         null=True, blank=True,
         related_name='users',
     )
-
+    
+    county = models.ForeignKey('core.County', on_delete=models.SET_NULL, null=True, blank=True)
+    
     def __str__(self):
         return f"{self.username} ({self.get_role_display()})"

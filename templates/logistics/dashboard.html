@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Logistics Dashboard</h2>
+    <p>Dispatch approved orders from your hub.</p>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="card mt-3">
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Facility</th>
+                        <th>Priority</th>
+                        <th>Items</th>
+                        <th>Date Approved</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td>#{{ order.id }}</td>
+                        <td>{{ order.facility.name }}</td>
+                        <td>{{ order.get_priority_display }}</td>
+                        <td>
+                            <ul>
+                                {% for item in order.items.all %}
+                                    <li>{{ item.quantity }} x {{ item.medicine.name }}</li>
+                                {% endfor %}
+                            </ul>
+                        </td>
+                        <td>{{ order.approved_at|date:"Y-m-d H:i" }}</td>
+                        <td>
+                            <form action="{% url 'dispatch_order' order.id %}" method="post" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-primary btn-sm">Dispatch</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center">No approved orders ready for dispatch.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

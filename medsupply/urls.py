@@ -1,5 +1,5 @@
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
 from django.contrib.auth import views as auth_views
 from . import views
 from orders import views as order_views
@@ -45,4 +45,10 @@ urlpatterns = [
 
     # Coverage
     path('coverage/', core_views.coverage_report, name='coverage_report'),
+
+    # Accounts App (County Admin Approvals)
+    path('accounts/', include('accounts.urls')),
+
+    # Orders App (Logistics Dashboard)
+    path('logistics/', include('orders.urls')),
 ]

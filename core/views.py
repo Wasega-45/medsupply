@@ -1,7 +1,6 @@
 from django.shortcuts import render
 from .models import Facility, SupplyHub
 
-
 def coverage_report(request):
     facilities = Facility.objects.all()
     hubs = SupplyHub.objects.filter(active=True)
