@@ -17,19 +17,60 @@
                 <p>Medical Supply &amp; Drone Logistics</p>
             </div>
             <nav>
-                <a href="{% url 'home' %}" class="{% if active == 'home' %}active{% endif %}">🏠 Dashboard</a>
-                <a href="{% url 'facility_map' %}" class="{% if active == 'map' %}active{% endif %}">🗺️ Map &amp; GIS</a>
-                <a href="{% url 'order_list' %}" class="{% if active == 'orders' %}active{% endif %}">📋 Orders</a>
-                <a href="{% url 'delivery_list' %}" class="{% if active == 'deliveries' %}active{% endif %}">🚚 Deliveries</a>
-                <a href="{% url 'coverage_report' %}" class="{% if active == 'coverage' %}active{% endif %}">📊 Coverage Analysis</a>
-                <a href="/admin/" class="{% if active == 'admin' %}active{% endif %}">⚙️ Admin Panel</a>
+                {% if user.is_authenticated %}
+                    <!-- 1. SMART DASHBOARD LINK -->
+                    {% if user.is_superuser or user.role == 'national_admin' %}
+                        <a href="/admin/" class="{% if active == 'dashboard' %}active{% endif %}">🏠 Dashboard</a>
+                    {% elif user.role == 'county_admin' %}
+                        <a href="{% url 'county_admin_approvals' %}" class="{% if active == 'dashboard' %}active{% endif %}">🏠 Approvals Dashboard</a>
+                    {% elif user.role == 'logistics' %}
+                        <a href="{% url 'logistics_dashboard' %}" class="{% if active == 'dashboard' %}active{% endif %}">🏠 Logistics Dashboard</a>
+                    {% elif user.role == 'facility' %}
+                        <a href="{% url 'facility_dashboard' %}" class="{% if active == 'dashboard' %}active{% endif %}">🏠 Facility Dashboard</a>
+                    {% else %}
+                        <a href="{% url 'home' %}" class="{% if active == 'dashboard' %}active{% endif %}">🏠 Home</a>
+                    {% endif %}
+
+                    <!-- 2. ROLE-SPECIFIC LINKS -->
+                    {% if user.role != 'national_admin' and not user.is_superuser %}
+                        <a href="{% url 'facility_map' %}" class="{% if active == 'map' %}active{% endif %}">🗺️ Map &amp; GIS</a>
+                    {% endif %}
+
+                    {% if user.role == 'facility' or user.role == 'county_admin' or user.role == 'logistics' or user.role == 'monitoring' %}
+                        <a href="{% url 'order_list' %}" class="{% if active == 'orders' %}active{% endif %}">📋 Orders</a>
+                    {% endif %}
+
+                    {% if user.role == 'logistics' or user.is_superuser or user.role == 'national_admin' %}
+                        <a href="{% url 'delivery_list' %}" class="{% if active == 'deliveries' %}active{% endif %}">🚚 Deliveries</a>
+                    {% endif %}
+
+                    {% if user.is_superuser or user.role == 'national_admin' %}
+                        <a href="{% url 'coverage_report' %}" class="{% if active == 'coverage' %}active{% endif %}">📊 Coverage Analysis</a>
+                        <a href="/admin/" class="{% if active == 'admin' %}active{% endif %}">⚙️ Admin Panel</a>
+                    {% endif %}
+
+                {% else %}
+                    <!-- Links for anonymous users (First-timers) -->
+                    <a href="{% url 'login' %}" class="{% if active == 'login' %}active{% endif %}">🔑 Sign In</a>
+                    
+                    <div style="padding: 10px 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 10px 0;"></div>
+                    
+                    <p style="font-size: 11px; color: #8fbcb5; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Register New Account</p>
+                    <a href="{% url 'register_facility' %}" class="{% if active == 'register_facility' %}active{% endif %}" style="font-size: 14px;">🏥 Register a Facility</a>
+                    <a href="{% url 'register_hub' %}" class="{% if active == 'register_hub' %}active{% endif %}" style="font-size: 14px;">📦 Register a Supply Hub</a>
+                    
+                    <div style="padding: 10px 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 10px 0;"></div>
+                    
+                    <a href="{% url 'about' %}" class="{% if active == 'about' %}active{% endif %}">ℹ️ About Us</a>
+                {% endif %}
             </nav>
 
             <div style="padding: 20px; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 20px;">
                 {% if user.is_authenticated %}
                 <div style="font-size: 13px; color: #8fbcb5; margin-bottom: 10px;">
                     Signed in as<br>
-                    <strong style="color: #14b8a6;">{{ user.username }}</strong>
+                    <strong style="color: #14b8a6;">{{ user.username }}</strong><br>
+                    <span style="font-size: 11px; text-transform: capitalize; color: #a0aec0;">{{ user.get_role_display }}</span>
                 </div>
                 <form method="post" action="{% url 'logout' %}">
                     {% csrf_token %}
@@ -38,8 +79,6 @@
                         Sign Out
                     </button>
                 </form>
-                {% else %}
-                <a href="{% url 'login' %}" style="color: #14b8a6; text-decoration: none; font-size: 14px;">Sign In →</a>
                 {% endif %}
             </div>
         </aside>
