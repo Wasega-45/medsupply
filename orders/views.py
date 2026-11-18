@@ -78,6 +78,7 @@ def facility_dashboard(request):
 
 @login_required
 def place_order(request):
+    """Facility users submit a new multi-item order."""
     if request.user.role != 'facility':
         return redirect('post_login_redirect')
 
@@ -91,6 +92,13 @@ def place_order(request):
         formset = OrderItemFormSet(request.POST)
 
         if form.is_valid() and formset.is_valid():
+            # 1. Find the nearest hub to check stock
+            nearest_hub, distance = facility.nearest_hub()
+            
+            if not nearest_hub:
+                messages.error(request, "No active Supply Hub found to fulfil this order.")
+                return redirect('place_order')
+
             order = form.save(commit=False)
             order.facility = facility
             order.requested_by = request.user
@@ -98,9 +106,27 @@ def place_order(request):
             order.save()
 
             formset.instance = order
-            formset.save()
+            items = formset.save()
 
-            messages.success(request, f"Order #{order.id} submitted successfully.")
+            # 2. Check and deduct stock from the nearest Hub
+            stock_error = False
+            for item in order.items.all():
+                hub_inventory = Inventory.objects.filter(hub=nearest_hub, medicine=item.medicine).first()
+                
+                if not hub_inventory or hub_inventory.quantity < item.quantity:
+                    messages.error(request, f"Insufficient stock for {item.medicine.name} at {nearest_hub.name}.")
+                    stock_error = True
+                    break
+                
+                # Deduct stock and reserve it
+                hub_inventory.quantity -= item.quantity
+                hub_inventory.save()
+
+            if stock_error:
+                order.delete() # Rollback the order if stock is missing
+                return redirect('place_order')
+
+            messages.success(request, f"Order #{order.id} submitted successfully. Stock reserved at {nearest_hub.name}.")
             return redirect('facility_dashboard')
     else:
         form = OrderForm()
@@ -190,7 +216,6 @@ def update_inventory(request):
         if medicine_id and quantity > 0:
             medicine = get_object_or_404(Medicine, id=medicine_id)
             
-            # Get existing inventory record or create a new one
             inventory, created = Inventory.objects.get_or_create(
                 hub=hub, 
                 medicine=medicine,

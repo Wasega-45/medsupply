@@ -1,111 +1,102 @@
 {% extends 'base.html' %}
 
-{% block title %}Place Order - MedSupply Kenya{% endblock %}
-
 {% block content %}
-<div class="page-header">
-    <h1>Place New Order</h1>
-    <p>{{ facility.name }} — {{ facility.county.name }} County</p>
+<div class="container mt-4">
+    <h2>Place a New Order</h2>
+    <p>Request medical supplies from your nearest Supply Hub.</p>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="card mt-3">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        {{ form.priority.label_tag }}
+                        {{ form.priority }}
+                        {{ form.priority.errors }}
+                    </div>
+                    <div class="col-md-6">
+                        {{ form.notes.label_tag }}
+                        {{ form.notes }}
+                        {{ form.notes.errors }}
+                    </div>
+                </div>
+
+                <h5 class="mt-4">Order Items</h5>
+                {{ formset.management_form }}
+                
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Medicine</th>
+                            <th>Quantity</th>
+                            <th>Available at Hub</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="formset-container">
+                        {% for item_form in formset %}
+                        <tr class="formset-row">
+                            <td>{{ item_form.medicine }}</td>
+                            <td>{{ item_form.quantity }}</td>
+                            <td class="stock-level text-muted">Select a medicine</td>
+                            <td>
+                                {% if formset.can_delete %}
+                                    {{ item_form.DELETE }}
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="add-more">+ Add Another Item</button>
+                <hr>
+                
+                <button type="submit" class="btn btn-primary">Submit Order</button>
+                <a href="{% url 'facility_dashboard' %}" class="btn btn-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
 </div>
 
-{% if messages %}
-    {% for message in messages %}
-    <div style="background: #d1fae5; color: #065f46; padding: 12px; border-radius: 6px; margin-bottom: 20px;">
-        {{ message }}
-    </div>
-    {% endfor %}
-{% endif %}
+<!-- Pass the Facility's current stock to JavaScript for validation -->
+{{ inventory|json_script:"inventory-data" }}
 
-<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
+<script>
+    // This script helps the user see how much stock is available for the selected medicine.
+    // Note: To do this accurately across the whole nearest hub, you would ideally make an API call.
+    // For this UI, we will show a simple note. 
+    
+    // You can uncomment the code below to make the "Available at Hub" column dynamic if you build an API for it.
+    /*
+    document.addEventListener('change', function(e) {
+        if (e.target.name && e.target.name.includes('-medicine')) {
+            const row = e.target.closest('tr');
+            const medicineId = e.target.value;
+            const stockCell = row.querySelector('.stock-level');
+            
+            if (medicineId) {
+                // In a real app, fetch this from an API endpoint
+                stockCell.innerHTML = "<span class='text-success'>Fetching...</span>";
+            } else {
+                stockCell.innerHTML = "Select a medicine";
+            }
+        }
+    });
+    */
 
-    <!-- Order form -->
-    <div class="card">
-        <form method="post">
-            {% csrf_token %}
-
-            <!-- Priority and Notes -->
-            <h2 style="color: #0d3b45; font-size: 18px; margin-bottom: 15px;">Order Details</h2>
-
-            <div style="margin-bottom: 15px;">
-                <label style="display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px;">Priority *</label>
-                {{ form.priority }}
-            </div>
-
-            <div style="margin-bottom: 25px;">
-                <label style="display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px;">Notes</label>
-                {{ form.notes }}
-            </div>
-
-            <!-- Order items -->
-            <h2 style="color: #0d3b45; font-size: 18px; margin-bottom: 15px;">Medicines Requested</h2>
-
-            {{ formset.management_form }}
-
-            <table style="margin-bottom: 15px;">
-                <thead>
-                    <tr>
-                        <th>Medicine</th>
-                        <th style="width: 120px;">Quantity</th>
-                        <th style="width: 80px;">Remove</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item_form in formset %}
-                    <tr>
-                        <td>
-                            {{ item_form.id }}
-                            {{ item_form.medicine }}
-                        </td>
-                        <td>{{ item_form.quantity }}</td>
-                        <td style="text-align: center;">
-                            {% if item_form.instance.pk %}
-                                {{ item_form.DELETE }}
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-
-            <div style="margin-top: 25px; display: flex; gap: 10px;">
-                <button type="submit"
-                        style="background: #14b8a6; color: white; padding: 12px 30px; border: none; border-radius: 6px; font-size: 15px; font-weight: bold; cursor: pointer;">
-                    Submit Order
-                </button>
-                <a href="{% url 'facility_dashboard' %}"
-                   style="background: #e5e7eb; color: #374151; padding: 12px 30px; border-radius: 6px; font-size: 15px; font-weight: bold; text-decoration: none;">
-                    Cancel
-                </a>
-            </div>
-
-        </form>
-    </div>
-
-    <!-- Current stock sidebar -->
-    <div class="card" style="align-self: start;">
-        <h2 style="color: #0d3b45; font-size: 16px; margin-bottom: 15px;">Your Current Stock</h2>
-
-        {% if inventory %}
-        <table>
-            <thead>
-                <tr>
-                    <th style="font-size: 12px;">Medicine</th>
-                    <th style="font-size: 12px;">Qty</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in inventory %}
-                <tr>
-                    <td style="font-size: 13px;">{{ item.medicine.name }}</td>
-                    <td style="font-size: 13px; font-weight: bold;">{{ item.quantity }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        {% else %}
-        <p style="color: #7f8c8d; font-size: 14px;">No stock recorded yet.</p>
-        {% endif %}
-    </div>
-
-</div>
+    document.getElementById('add-more').addEventListener('click', function() {
+        // This is a basic way to add more rows. For Django formsets, a JS script like 
+        // 'jquery.formset.js' is usually used to handle the ManagementForm TOTAL_FORMS updates.
+        alert("To add more items, you would typically reload the page or use a Javascript library to dynamically clone the formset rows.");
+    });
+</script>
 {% endblock %}
