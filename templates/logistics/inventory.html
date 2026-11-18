@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Hub Inventory Management</h2>
+    <p>Manage the medicine stock for <strong>{{ hub.name }}</strong></p>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row mt-4">
+        <div class="col-md-5">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    Add / Update Stock
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label">Select Medicine</label>
+                            <select name="medicine_id" class="form-select" required>
+                                <option value="">-- Choose a medicine --</option>
+                                {% for med in medicines %}
+                                    <option value="{{ med.id }}">{{ med.name }} ({{ med.unit }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Quantity to Add</label>
+                            <input type="number" name="quantity" class="form-control" min="1" required>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100">Update Stock</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-7">
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    Current Stock Levels
+                </div>
+                <div class="card-body">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Medicine</th>
+                                <th>Quantity</th>
+                                <th>Last Updated</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in inventory_items %}
+                            <tr>
+                                <td>{{ item.medicine.name }}</td>
+                                <td>
+                                    <span class="badge {% if item.quantity > 50 %}bg-success{% elif item.quantity > 10 %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+                                        {{ item.quantity }} {{ item.medicine.unit }}
+                                    </span>
+                                </td>
+                                <td>{{ item.updated_at|date:"Y-m-d H:i" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center">No stock recorded yet.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

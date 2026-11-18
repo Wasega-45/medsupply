@@ -6,7 +6,7 @@ from django.utils import timezone
 import math
 from .models import Order, OrderItem, Delivery
 from .forms import OrderForm, OrderItemFormSet
-from core.models import Facility, SupplyHub, Inventory, Drone
+from core.models import Facility, SupplyHub, Inventory, Medicine, Drone
 
 
 def order_list(request):
@@ -78,7 +78,6 @@ def facility_dashboard(request):
 
 @login_required
 def place_order(request):
-    """Facility users submit a new multi-item order."""
     if request.user.role != 'facility':
         return redirect('post_login_redirect')
 
@@ -129,6 +128,7 @@ def logistics_dashboard(request):
     }
     return render(request, 'logistics/dashboard.html', context)
 
+
 @login_required
 def dispatch_order(request, order_id):
     if request.method == 'POST':
@@ -145,7 +145,6 @@ def dispatch_order(request, order_id):
             order.status = 'dispatched'
             order.save()
             
-            # Set the drone to in_transit
             drone = Drone.objects.filter(home_hub=nearest_hub, status='idle').first()
             if drone:
                 drone.status = 'in_transit'
@@ -154,10 +153,64 @@ def dispatch_order(request, order_id):
     return redirect('logistics_dashboard')
 
 
+# --- HUB INVENTORY VIEWS ---
+
+@login_required
+def hub_inventory(request):
+    if request.user.role != 'logistics' and not request.user.is_superuser:
+        messages.error(request, "You do not have permission to view this page.")
+        return redirect('post_login_redirect')
+
+    hub = request.user.hub
+    if not hub:
+        messages.error(request, "Your account is not linked to a Supply Hub.")
+        return redirect('logistics_dashboard')
+
+    medicines = Medicine.objects.filter(active=True)
+    inventory_items = Inventory.objects.filter(hub=hub).select_related('medicine')
+
+    context = {
+        'hub': hub,
+        'medicines': medicines,
+        'inventory_items': inventory_items,
+    }
+    return render(request, 'logistics/inventory.html', context)
+
+
+@login_required
+def update_inventory(request):
+    if request.method == 'POST' and (request.user.role == 'logistics' or request.user.is_superuser):
+        hub = request.user.hub
+        if not hub:
+            return redirect('logistics_dashboard')
+
+        medicine_id = request.POST.get('medicine_id')
+        quantity = int(request.POST.get('quantity', 0))
+
+        if medicine_id and quantity > 0:
+            medicine = get_object_or_404(Medicine, id=medicine_id)
+            
+            # Get existing inventory record or create a new one
+            inventory, created = Inventory.objects.get_or_create(
+                hub=hub, 
+                medicine=medicine,
+                defaults={'quantity': quantity}
+            )
+            
+            if not created:
+                inventory.quantity += quantity
+                inventory.save()
+                
+            messages.success(request, f"Successfully added {quantity} {medicine.unit} of {medicine.name} to stock.")
+        else:
+            messages.error(request, "Please select a medicine and enter a valid quantity.")
+
+    return redirect('hub_inventory')
+
+
 # --- DRONE SIMULATION & API ---
 
 def simulate_drones(request):
-    """Moves in-transit drones slightly closer to their destination."""
     active_drones = Drone.objects.filter(status='in_transit', active=True)
     
     for drone in active_drones:
@@ -189,7 +242,6 @@ def simulate_drones(request):
                     delivery.order.completed_at = timezone.now()
                     delivery.order.save()
                 else:
-                    # Move 10% closer
                     drone.latitude = float(drone.latitude) + (lat_diff * 0.1)
                     drone.longitude = float(drone.longitude) + (lng_diff * 0.1)
                     drone.save()
@@ -198,7 +250,6 @@ def simulate_drones(request):
 
 
 def drones_api(request):
-    """Returns the current coordinates and status of all active drones."""
     active_drones = Drone.objects.filter(active=True)
     data = []
     for d in active_drones:

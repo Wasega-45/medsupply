@@ -97,7 +97,8 @@ class Medicine(models.Model):
 
 
 class Inventory(models.Model):
-    facility = models.ForeignKey(Facility, on_delete=models.CASCADE, related_name='inventory')
+    facility = models.ForeignKey(Facility, on_delete=models.CASCADE, related_name='inventory', null=True, blank=True)
+    hub = models.ForeignKey('SupplyHub', on_delete=models.CASCADE, related_name='hub_inventory', null=True, blank=True)
     medicine = models.ForeignKey(Medicine, on_delete=models.CASCADE, related_name='inventory')
     quantity = models.PositiveIntegerField(default=0)
     reserved_quantity = models.PositiveIntegerField(default=0)
@@ -105,10 +106,14 @@ class Inventory(models.Model):
 
     class Meta:
         verbose_name_plural = "Inventory"
-        unique_together = ('facility', 'medicine')
+        constraints = [
+            models.UniqueConstraint(fields=['facility', 'medicine'], name='unique_facility_medicine'),
+            models.UniqueConstraint(fields=['hub', 'medicine'], name='unique_hub_medicine')
+        ]
 
     def __str__(self):
-        return f"{self.medicine.name} @ {self.facility.name}: {self.quantity}"
+        location = self.facility.name if self.facility else (self.hub.name if self.hub else "Unknown")
+        return f"{self.medicine.name} @ {location}: {self.quantity}"
 
 
 class SupplyHub(models.Model):

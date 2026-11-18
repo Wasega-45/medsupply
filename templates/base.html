@@ -44,6 +44,10 @@
                         <a href="{% url 'delivery_list' %}" class="{% if active == 'deliveries' %}active{% endif %}">🚚 Deliveries</a>
                     {% endif %}
 
+                    {% if user.role == 'logistics' %}
+                        <a href="{% url 'hub_inventory' %}" class="{% if active == 'inventory' %}active{% endif %}">📦 Hub Inventory</a>
+                    {% endif %}
+
                     {% if user.is_superuser or user.role == 'national_admin' %}
                         <a href="{% url 'coverage_report' %}" class="{% if active == 'coverage' %}active{% endif %}">📊 Coverage Analysis</a>
                         <a href="/admin/" class="{% if active == 'admin' %}active{% endif %}">⚙️ Admin Panel</a>
