@@ -27,6 +27,18 @@
         70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); }
         100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
     }
+    .map-legend {
+        background: white;
+        padding: 10px 15px;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        font-family: system-ui, sans-serif;
+        font-size: 14px;
+        line-height: 1.8;
+        color: #333;
+    }
+    .legend-item { display: flex; align-items: center; gap: 8px; }
+    .legend-dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; }
 </style>
 
 <div class="page-header">
@@ -38,6 +50,7 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
+    // Initialize map (default to Kenya center)
     var map = L.map('map').setView([-0.0236, 37.9062], 6);
 
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -46,6 +59,22 @@
         referrerPolicy: 'strict-origin-when-cross-origin'
     }).addTo(map);
 
+    // --- LEGEND ---
+    var legend = L.control({position: 'bottomright'});
+    legend.onAdd = function (map) {
+        var div = L.DomUtil.create('div', 'map-legend');
+        div.innerHTML = `
+            <strong>Map Legend</strong><br>
+            <div class="legend-item"><div class="legend-dot" style="background:#3b82f6;"></div> Active Facility</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#9ca3af;"></div> Pending Facility</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#14b8a6;"></div> Supply Hub</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#f59e0b;"></div> Drone</div>
+        `;
+        return div;
+    };
+    legend.addTo(map);
+
+    // --- DATA ---
     var facilities = [
         {% for facility in facilities %}
         {
@@ -53,7 +82,8 @@
             type: "{{ facility.get_facility_type_display }}",
             lat: {{ facility.latitude|default:"null" }},
             lng: {{ facility.longitude|default:"null" }},
-            county: "{{ facility.county.name }}"
+            county: "{{ facility.county.name }}",
+            status: "{{ facility.status }}"
         }{% if not forloop.last %},{% endif %}
         {% endfor %}
     ];
@@ -69,15 +99,32 @@
         {% endfor %}
     ];
 
-    // Facility markers (blue)
+    var markers = []; 
+
+    // Facility markers (Blue for active, Gray for pending)
     facilities.forEach(function(f) {
         if (f.lat !== null && f.lng !== null) {
-            var marker = L.marker([f.lat, f.lng]).addTo(map);
+            var markerColor = f.status === 'active' ? '#3b82f6' : '#9ca3af'; 
+            
+            var marker = L.circleMarker([f.lat, f.lng], {
+                radius: 8,
+                fillColor: markerColor,
+                color: "#ffffff",
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 0.9
+            }).addTo(map);
+
+            var statusLabel = f.status === 'active' ? '<span style="color:#3b82f6;font-weight:bold;">Active</span>' : '<span style="color:#9ca3af;font-weight:bold;">Pending Approval</span>';
+
             marker.bindPopup(
                 "<strong>" + f.name + "</strong><br>" +
                 "Type: " + f.type + "<br>" +
-                "County: " + f.county
+                "County: " + f.county + "<br>" +
+                "Status: " + statusLabel
             );
+            
+            markers.push(marker); 
         }
     });
 
@@ -104,17 +151,29 @@
             weight: 2,
             radius: h.radius * 1000
         }).addTo(map);
+        
+        markers.push(hubMarker);
     });
+
+    // --- AUTO-ZOOM LOGIC (Only for Kenya) ---
+    var kenyaMarkers = markers.filter(function(m) {
+        var latlng = m.getLatLng();
+        // Kenya bounding box: roughly Lat -5 to 5, Lng 33 to 42
+        return (latlng.lat > -5 && latlng.lat < 5 && latlng.lng > 33 && latlng.lng < 42);
+    });
+
+    if (kenyaMarkers.length > 0) {
+        var group = new L.featureGroup(kenyaMarkers);
+        map.fitBounds(group.getBounds().pad(0.2)); 
+    }
 
     // --- DRONE SIMULATION LOGIC ---
     var droneMarkers = {};
 
     function fetchDrones() {
-        // Ping the backend to simulate movement
         fetch('/logistics/api/simulate-drones/')
             .then(response => response.json())
             .then(data => {
-                // Now fetch the updated drone positions
                 return fetch('/logistics/api/drones/');
             })
             .then(response => response.json())
@@ -128,10 +187,8 @@
         drones.forEach(function(d) {
             if (d.lat && d.lng) {
                 if (droneMarkers[d.id]) {
-                    // Move existing marker
                     droneMarkers[d.id].setLatLng([d.lat, d.lng]);
                 } else {
-                    // Create new marker
                     var marker = L.marker([d.lat, d.lng], {
                         icon: L.divIcon({
                             className: 'custom-drone-marker',
@@ -148,9 +205,7 @@
         });
     }
 
-    // Run simulation ping every 3 seconds
     setInterval(fetchDrones, 3000);
-    // Initial fetch
     fetchDrones();
 </script>
 {% endblock %}

@@ -1,83 +1,139 @@
 {% extends 'base.html' %}
 
-{% block title %}Register Hub - MedSupply Kenya{% endblock %}
-
 {% block content %}
-<div class="page-header">
-    <h1>Register a Supply Hub Account</h1>
-    <p>Create an account to manage inventory and dispatch for your hub</p>
-</div>
+<div class="container mt-4">
+    <h2>Register a Supply Hub Account</h2>
+    <p>Create an account to manage supply deliveries for your hub.</p>
 
-<div class="card" style="max-width: 640px;">
-
-    <div style="background: #dbeafe; color: #1e40af; padding: 12px; border-radius: 6px; margin-bottom: 20px; font-size: 14px;">
-        <strong>Note:</strong> Your account will need approval by a National Administrator before you can manage inventory or dispatch orders.
+    <div class="alert alert-info mt-3">
+        <strong>Note:</strong> Your account will need approval by the National Administrator before you can dispatch orders.
     </div>
 
-    <form method="post">
-        {% csrf_token %}
+    <div class="card mt-3">
+        <div class="card-body">
+            <form method="post" id="hubForm">
+                {% csrf_token %}
+                
+                <h5 class="mb-3">Account Details</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        {{ form.username.label_tag }}
+                        {{ form.username }}
+                        {{ form.username.errors }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        {{ form.email.label_tag }}
+                        {{ form.email }}
+                        {{ form.email.errors }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        {{ form.first_name.label_tag }}
+                        {{ form.first_name }}
+                        {{ form.first_name.errors }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        {{ form.phone.label_tag }}
+                        {{ form.phone }}
+                        {{ form.phone.errors }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        {{ form.password1.label_tag }}
+                        {{ form.password1 }}
+                        {{ form.password1.errors }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        {{ form.password2.label_tag }}
+                        {{ form.password2 }}
+                        {{ form.password2.errors }}
+                    </div>
+                </div>
 
-        {% if form.errors %}
-        <div style="background: #fecaca; color: #991b1b; padding: 12px; border-radius: 6px; margin-bottom: 20px; font-size: 14px;">
-            <strong>Please fix the following:</strong>
-            <ul style="margin-top: 6px; padding-left: 20px;">
-                {% for field, errors in form.errors.items %}
-                    {% for error in errors %}
-                    <li>{{ field }}: {{ error }}</li>
-                    {% endfor %}
-                {% endfor %}
-            </ul>
+                <hr>
+                <h5 class="mb-3">Supply Hub Details</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        {{ form.hub_name.label_tag }}
+                        {{ form.hub_name }}
+                        {{ form.hub_name.errors }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        {{ form.county.label_tag }}
+                        {{ form.county }}
+                        {{ form.county.errors }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        {{ form.location.label_tag }}
+                        {{ form.location }}
+                        <small class="text-muted">e.g., Industrial Area, Nairobi</small>
+                        {{ form.location.errors }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        {{ form.service_radius_km.label_tag }}
+                        {{ form.service_radius_km }}
+                        {{ form.service_radius_km.errors }}
+                    </div>
+                    {{ form.latitude }}
+                    {{ form.longitude }}
+                    <div class="col-12">
+                        <small class="text-success" id="locationStatus"></small>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary mt-3" id="submitBtn">Register</button>
+            </form>
         </div>
-        {% endif %}
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-
-            <div>
-                <label style="display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px;">Username *</label>
-                {{ form.username }}
-            </div>
-
-            <div>
-                <label style="display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px;">Email *</label>
-                {{ form.email }}
-            </div>
-
-            <div>
-                <label style="display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px;">Full Name *</label>
-                {{ form.first_name }}
-            </div>
-
-            <div>
-                <label style="display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px;">Phone</label>
-                {{ form.phone }}
-            </div>
-
-            <div style="grid-column: 1 / -1;">
-                <label style="display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px;">Supply Hub *</label>
-                {{ form.hub }}
-            </div>
-
-            <div>
-                <label style="display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px;">Password *</label>
-                {{ form.password1 }}
-            </div>
-
-            <div>
-                <label style="display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px;">Confirm Password *</label>
-                {{ form.password2 }}
-            </div>
-
-        </div>
-
-        <button type="submit"
-                style="background: #14b8a6; color: white; padding: 12px 30px; border: none; border-radius: 6px; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 20px;">
-            Register
-        </button>
-
-    </form>
-
-    <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #ecf0f1; font-size: 14px;">
-        Already have an account? <a href="{% url 'login' %}" style="color: #14b8a6;">Sign in</a>
     </div>
+    
+    <p class="mt-3">Already have an account? <a href="{% url 'login' %}">Sign in</a></p>
 </div>
+
+<script>
+document.getElementById('hubForm').addEventListener('submit', function(e) {
+    var lat = document.getElementById('id_latitude').value;
+    var lng = document.getElementById('id_longitude').value;
+    var locationText = document.getElementById('id_location').value;
+    
+    if (!lat || !lng) {
+        e.preventDefault(); 
+        var submitBtn = document.getElementById('submitBtn');
+        var statusText = document.getElementById('locationStatus');
+        var county = document.getElementById('id_county');
+        var countyName = county.options[county.selectedIndex].text;
+        
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = 'Finding location...';
+        statusText.innerHTML = 'Searching for coordinates...';
+
+        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(locationText + ', ' + countyName + ', Kenya')}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.length > 0) {
+                    document.getElementById('id_latitude').value = data[0].lat;
+                    document.getElementById('id_longitude').value = data[0].lon;
+                    statusText.innerHTML = 'Location found! Submitting...';
+                    document.getElementById('hubForm').submit();
+                } else {
+                    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(countyName + ', Kenya')}`)
+                        .then(res => res.json())
+                        .then(countyData => {
+                            if (countyData && countyData.length > 0) {
+                                document.getElementById('id_latitude').value = countyData[0].lat;
+                                document.getElementById('id_longitude').value = countyData[0].lon;
+                            } else {
+                                document.getElementById('id_latitude').value = -0.0236;
+                                document.getElementById('id_longitude').value = 37.9062;
+                            }
+                            statusText.innerHTML = 'Using approximate location. Submitting...';
+                            document.getElementById('hubForm').submit();
+                        });
+                }
+            })
+            .catch(error => {
+                document.getElementById('id_latitude').value = -0.0236;
+                document.getElementById('id_longitude').value = 37.9062;
+                document.getElementById('hubForm').submit();
+            });
+    }
+});
+</script>
 {% endblock %}

@@ -1,7 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
-from django.urls import reverse
 from django.contrib import messages
 from django.utils import timezone
 from .forms import FacilityRegistrationForm, HubRegistrationForm
@@ -12,10 +11,24 @@ def register_facility(request):
         form = FacilityRegistrationForm(request.POST)
         if form.is_valid():
             user = form.save(commit=False)
+            
+            # The JS already found the coordinates, we just save them
+            lat = form.cleaned_data.get('latitude')
+            lng = form.cleaned_data.get('longitude')
+            
+            # Fallback if JS failed
+            if not lat or not lng:
+                lat, lng = -0.0236, 37.9062
+
+            user.facility.latitude = lat
+            user.facility.longitude = lng
+            user.facility.save()
+                
             user.role = 'facility'
             user.status = 'pending'
-            user.facility = form.cleaned_data['facility']
             user.save()
+            
+            messages.success(request, "Registration submitted! Your facility is pending approval.")
             return redirect('pending_approval')
     else:
         form = FacilityRegistrationForm()
@@ -28,10 +41,22 @@ def register_hub(request):
         form = HubRegistrationForm(request.POST)
         if form.is_valid():
             user = form.save(commit=False)
+            
+            lat = form.cleaned_data.get('latitude')
+            lng = form.cleaned_data.get('longitude')
+            
+            if not lat or not lng:
+                lat, lng = -0.0236, 37.9062
+
+            user.hub.latitude = lat
+            user.hub.longitude = lng
+            user.hub.save()
+            
             user.role = 'logistics'
             user.status = 'pending'
-            user.hub = form.cleaned_data['hub']
             user.save()
+            
+            messages.success(request, "Registration submitted! Your hub is pending approval.")
             return redirect('pending_approval')
     else:
         form = HubRegistrationForm()
@@ -45,10 +70,8 @@ def pending_approval(request):
 
 @login_required
 def post_login_redirect(request):
-    """Redirect users to the right page based on their role."""
     user = request.user
 
-    # Block if status isn't active
     if user.status != 'active' and not user.is_superuser:
         return redirect('pending_approval')
 
@@ -98,6 +121,14 @@ def approve_user(request, user_id):
         if user_to_approve.county == request.user.county:
             user_to_approve.status = 'active' 
             user_to_approve.save()
+            
+            if user_to_approve.facility:
+                user_to_approve.facility.status = 'active'
+                user_to_approve.facility.save()
+            if user_to_approve.hub:
+                user_to_approve.hub.active = True
+                user_to_approve.hub.save()
+                
             messages.success(request, f"Approved {user_to_approve.username}")
         else:
             messages.error(request, "You cannot approve a user outside your county.")

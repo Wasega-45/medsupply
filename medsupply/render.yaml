@@ -1,6 +1,0 @@
-services:
-  - type: web
-    name: medsupply
-    env: python
-    buildCommand: "./build.sh"
-    startCommand: "gunicorn medsupply.wsgi:application"
