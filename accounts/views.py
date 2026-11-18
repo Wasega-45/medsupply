@@ -3,8 +3,10 @@ from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
+from django.db.models import Q
 from .forms import FacilityRegistrationForm, HubRegistrationForm
 from .models import User
+
 
 def register_facility(request):
     if request.method == 'POST':
@@ -12,11 +14,9 @@ def register_facility(request):
         if form.is_valid():
             user = form.save(commit=False)
             
-            # The JS already found the coordinates, we just save them
             lat = form.cleaned_data.get('latitude')
             lng = form.cleaned_data.get('longitude')
             
-            # Fallback if JS failed
             if not lat or not lng:
                 lat, lng = -0.0236, 37.9062
 
@@ -97,11 +97,18 @@ def county_admin_approvals(request):
     
     admin_county = request.user.county 
     
-    pending_users = User.objects.filter(
-        status='pending', 
-        county=admin_county
-    ).select_related('facility', 'hub')
+    # SECURITY CHECK: If they don't have a county assigned, block them!
+    if not admin_county:
+        messages.error(request, "Your account is not assigned to a county. Please contact the National Admin.")
+        return redirect('home')
 
+    # Filter users where EITHER the user's county OR their facility/hub county matches the admin's county
+    pending_users = User.objects.filter(
+        Q(county=admin_county) | Q(facility__county=admin_county) | Q(hub__county=admin_county),
+        status='pending'
+    ).select_related('facility', 'hub').distinct()
+
+    # Filter orders strictly by the admin's county
     pending_orders = Order.objects.filter(
         status='pending',
         facility__county=admin_county
@@ -118,7 +125,14 @@ def approve_user(request, user_id):
     if request.method == 'POST':
         user_to_approve = get_object_or_404(User, id=user_id)
         
-        if user_to_approve.county == request.user.county:
+        # Security check: Ensure they are in the same county
+        is_same_county = (
+            user_to_approve.county == request.user.county or 
+            (user_to_approve.facility and user_to_approve.facility.county == request.user.county) or
+            (user_to_approve.hub and user_to_approve.hub.county == request.user.county)
+        )
+
+        if is_same_county:
             user_to_approve.status = 'active' 
             user_to_approve.save()
             
@@ -140,10 +154,18 @@ def reject_user(request, user_id):
     if request.method == 'POST':
         user_to_reject = get_object_or_404(User, id=user_id)
         
-        if user_to_reject.county == request.user.county:
+        is_same_county = (
+            user_to_reject.county == request.user.county or 
+            (user_to_reject.facility and user_to_reject.facility.county == request.user.county) or
+            (user_to_reject.hub and user_to_reject.hub.county == request.user.county)
+        )
+
+        if is_same_county:
             user_to_reject.status = 'rejected' 
             user_to_reject.save()
             messages.warning(request, f"Rejected {user_to_reject.username}")
+        else:
+            messages.error(request, "You cannot reject a user outside your county.")
             
     return redirect('county_admin_approvals')
 
