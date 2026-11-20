@@ -5,9 +5,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}MedSupply Kenya{% endblock %}</title>
+    
+    <!-- Link to the new 3D CSS -->
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    
+    <!-- Google Fonts for modern typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
 </head>
 <body>
+    <!-- These divs create the floating glowing background behind everything -->
+    <div class="glow-bg glow-1"></div>
+    <div class="glow-bg glow-2"></div>
+
     <div class="layout">
 
         <!-- Sidebar -->
@@ -16,9 +27,10 @@
                 <h2>🇰🇪 MedSupply Kenya</h2>
                 <p>Medical Supply &amp; Drone Logistics</p>
             </div>
+            
             <nav>
                 {% if user.is_authenticated %}
-                    <!-- 1. SMART DASHBOARD LINK -->
+                    <!-- Smart Dashboard Links -->
                     {% if user.is_superuser or user.role == 'national_admin' %}
                         <a href="/admin/" class="{% if active == 'dashboard' %}active{% endif %}">🏠 Dashboard</a>
                     {% elif user.role == 'county_admin' %}
@@ -31,73 +43,83 @@
                         <a href="{% url 'home' %}" class="{% if active == 'dashboard' %}active{% endif %}">🏠 Home</a>
                     {% endif %}
 
-                    <!-- 2. ROLE-SPECIFIC LINKS -->
+                    <!-- Map -->
                     {% if user.role != 'national_admin' and not user.is_superuser %}
                         <a href="{% url 'facility_map' %}" class="{% if active == 'map' %}active{% endif %}">🗺️ Map &amp; GIS</a>
                     {% endif %}
 
+                    <!-- Orders -->
                     {% if user.role == 'facility' or user.role == 'county_admin' or user.role == 'logistics' or user.role == 'monitoring' %}
                         <a href="{% url 'order_list' %}" class="{% if active == 'orders' %}active{% endif %}">📋 Orders</a>
                     {% endif %}
 
+                    <!-- Deliveries -->
                     {% if user.role == 'logistics' or user.is_superuser or user.role == 'national_admin' %}
                         <a href="{% url 'delivery_list' %}" class="{% if active == 'deliveries' %}active{% endif %}">🚚 Deliveries</a>
                     {% endif %}
 
+                    <!-- Hub Inventory -->
                     {% if user.role == 'logistics' %}
                         <a href="{% url 'hub_inventory' %}" class="{% if active == 'inventory' %}active{% endif %}">📦 Hub Inventory</a>
                     {% endif %}
 
+                    <!-- National Admin Only -->
                     {% if user.is_superuser or user.role == 'national_admin' %}
                         <a href="{% url 'coverage_report' %}" class="{% if active == 'coverage' %}active{% endif %}">📊 Coverage Analysis</a>
                         <a href="/admin/" class="{% if active == 'admin' %}active{% endif %}">⚙️ Admin Panel</a>
                     {% endif %}
 
                 {% else %}
-                    <!-- Links for anonymous users (First-timers) -->
+                    <!-- Links for first-time visitors -->
                     <a href="{% url 'login' %}" class="{% if active == 'login' %}active{% endif %}">🔑 Sign In</a>
                     
-                    <div style="padding: 10px 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 10px 0;"></div>
+                    <div class="divider"></div>
                     
-                    <p style="font-size: 11px; color: #8fbcb5; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Register New Account</p>
-                    <a href="{% url 'register_facility' %}" class="{% if active == 'register_facility' %}active{% endif %}" style="font-size: 14px;">🏥 Register a Facility</a>
-                    <a href="{% url 'register_hub' %}" class="{% if active == 'register_hub' %}active{% endif %}" style="font-size: 14px;">📦 Register a Supply Hub</a>
+                    <p class="menu-label">Register New Account</p>
+                    <a href="{% url 'register_facility' %}" class="{% if active == 'register_facility' %}active{% endif %}">🏥 Register a Facility</a>
+                    <a href="{% url 'register_hub' %}" class="{% if active == 'register_hub' %}active{% endif %}">📦 Register a Supply Hub</a>
                     
-                    <div style="padding: 10px 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 10px 0;"></div>
+                    <div class="divider"></div>
                     
                     <a href="{% url 'about' %}" class="{% if active == 'about' %}active{% endif %}">ℹ️ About Us</a>
                 {% endif %}
             </nav>
 
-            <div style="padding: 20px; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 20px;">
+            <!-- User Profile Area -->
+            <div class="user-profile">
                 {% if user.is_authenticated %}
-                <div style="font-size: 13px; color: #8fbcb5; margin-bottom: 10px;">
-                    Signed in as<br>
-                    <strong style="color: #14b8a6;">{{ user.username }}</strong><br>
-                    <span style="font-size: 11px; text-transform: capitalize; color: #a0aec0;">{{ user.get_role_display }}</span>
+                <div class="profile-info">
+                    <span>Signed in as</span>
+                    <strong>{{ user.username }}</strong>
+                    <span class="role-badge">{{ user.get_role_display }}</span>
                 </div>
                 <form method="post" action="{% url 'logout' %}">
                     {% csrf_token %}
-                    <button type="submit"
-                            style="background: transparent; color: #cbd5d8; border: 1px solid rgba(255,255,255,0.2); padding: 8px 14px; border-radius: 4px; font-size: 13px; cursor: pointer; width: 100%;">
-                        Sign Out
-                    </button>
+                    <button type="submit" class="btn-logout">Sign Out</button>
                 </form>
+                {% else %}
+                <div class="profile-info">
+                    <span>Welcome to</span>
+                    <strong>MedSupply Kenya</strong>
+                </div>
                 {% endif %}
             </div>
         </aside>
 
         <!-- Main Content -->
         <main class="main-content">
-            {% block content %}{% endblock %}
+            <div class="content-wrapper">
+                {% block content %}{% endblock %}
+            </div>
 
             <!-- Footer -->
             <div class="footer">
                 <span>© 2026 MedSupply Kenya — A GIS-Based Medical Supply &amp; Drone Delivery System</span>
-                <br>
-                <a href="{% url 'about' %}">About</a>
-                <a href="{% url 'terms' %}">Terms of Service</a>
-                <a href="{% url 'privacy' %}">Privacy Policy</a>
+                <div class="footer-links">
+                    <a href="{% url 'about' %}">About</a>
+                    <a href="{% url 'terms' %}">Terms of Service</a>
+                    <a href="{% url 'privacy' %}">Privacy Policy</a>
+                </div>
             </div>
         </main>
 
